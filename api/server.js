@@ -3,12 +3,12 @@ const server = express();
 
 const helmet = require('helmet');
 
-//const ProjectsRouter = require('./routes/projects')
+const ProjectsRouter = require('../project/routers.js')
 
 server.use(helmet());
 server.use(express.json());
 
-//server.use('/api/projects', ProjectsRouter)
+server.use('/api/projects', ProjectsRouter)
 
 
 server.get('/', (req, res) => {
