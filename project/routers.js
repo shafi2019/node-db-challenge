@@ -1,57 +1,131 @@
 const express = require('express');
-const router = express.Router();
 
-const Projects = require('./model.js');
+const db = require('./model.js');
 
-router.get('/', (req, res) => {
-    Projects.find()
-    .then(projects => {
-      projects = projects.map((project) => {
-        return {
-          ...project,
-          completed: !!project.completed
-        }
-      });
-      res.status(200).json(projects)
-    })
-    .catch((error) => {
-      console.log(error);
-      res.status(500).json({message: 'Could not get all projects'})
-    })
-  })
+const server = express();
 
-  router.get('/:id/resources', (req, res) => { 
-    Projects.findResource(req.params.id)
-    .then(resources => {
-      res.status(200).json(resources)
-    })
-    .catch((error) => {
-      console.log(error)
-      res.status(500).json({message: 'Could not get that project ID'})
-    })
-  })
+server.use(express.json());
 
-  router.post('/', (req, res) => {
-    Projects.insert(req.body)
-    .then(project => {
-      project.completed = !!project.completed
-      res.status(201).json(project)
-    })
-    .catch((error) => {
-      console.log(error)
-      res.status(500).json({message: 'Could not create project'})
-    })
-  })
+server.get("/", (req,res)=>{
+    db.find()
+        .then(data=>{
+            data.map(item=>{
+                if(item.completed === 0){
+                    item.completed = false;
+                }else{
+                    item.completed = true;
+                }
+            })
+            res.status(200).json(data);
+        })
+        .catch(error=>{
+            console.log(error);
+            res.status(500).json({error:error, errorMessage:'Error getting projects'});
+        })
+});
 
-  router.post('/:id/resources', (req, res) => {
-    Projects.insertResource(req.params.id, req.body)
-      .then(resource => {
-        res.status(201).json(resource)
-      })
-      .catch((error) => {
-        console.log(error)
-        res.status(500).json({message: 'Could not create that resource'})
-      })
-  })
+server.get("/:id", (req,res)=>{
+    db.findById(req.params.id)
+        .then(data=>{
+            
+            if(data.completed === 0){
+                data.completed = false;
+            }else{
+                data.completed = true;
+            }
+            
+            res.status(200).json(data);
+        })
+        .catch(error=>{
+            console.log(error);
+            res.status(500).json({error:error, errorMessage:'Error getting projects'});
+        })
+});
 
-  module.exports = router;
+server.get("/:id/tasks", (req,res)=>{
+    db.findTask(req.params.id)
+        .then(data=>{
+            data.map(item=>{
+                if(item.completed === 0){
+                    item.completed = false;
+                }else{
+                    item.completed = true;
+                }
+            })
+            res.status(200).json(data);
+        })
+        .catch(error=>{
+            console.log(error);
+            res.status(500).json({error:error, errorMessage:'Error getting tasks'});
+        })
+});
+
+server.get("/:id/resources", (req,res)=>{
+    db.findProjectResource(req.params.id)
+        .then(data=>{
+            res.status(200).json(data);
+        })
+        .catch(error=>{
+            console.log(error);
+            res.status(500).json({error:error, errorMessage:'Error getting resources'});
+        })
+});
+
+server.get("/resources", (req,res)=>{
+    db.findResources()
+        .then(data=>{
+            res.status(200).json(data);
+        })
+        .catch(error=>{
+            console.log(error);
+            res.status(500).json({error:error, errorMessage:'Error getting resources'});
+        })
+});
+
+server.post("/resources", (req,res)=>{
+    db.addProject(req.body)
+        .then(data=>{
+            res.status(200).json(data);
+        })
+        .catch(error=>{
+            console.log(error);
+            res.status(500).json({error:error, errorMessage:'Error adding project'});
+        })
+});
+
+server.post("/:id/tasks", (req,res)=>{
+    db.addTask({...req.body,projectID:req.params.id})
+        .then(data=>{
+            res.status(200).json(data);
+        })
+        .catch(error=>{
+            console.log(error);
+            res.status(500).json({error:error, errorMessage:'Error adding tasks'});
+        })
+});
+
+server.post("/", (req,res)=>{
+    db.addResource(req.body)
+        .then(data=>{
+            res.status(200).json(data);
+        })
+        .catch(error=>{
+            console.log(error);
+            res.status(500).json({error:error, errorMessage:'Error adding resources'});
+        })
+});
+
+server.post(":id/resources/:resid", (req,res)=>{
+    db.connectResource(req.params.resid,req.params.id)
+        .then(data=>{
+            res.status(200).json({message:"successfully connected resource to project"});
+        })
+        .catch(error=>{
+            console.log(error);
+            res.status(500).json({error:error, errorMessage:'Error connecting resource to project'});
+        })
+});
+
+
+module.exports= server;
+

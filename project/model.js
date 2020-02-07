@@ -1,51 +1,58 @@
 const db = require('../data/db-config');
 
-module.exports = {
-  find,
-  findById,
-  findResource,
-  findResourceById,
-  insert,
-  insertResource
+module.exports={
+    find,
+    findById,
+    findResources,
+    addProject,
+    addTask,
+    findTask,
+    addResource,
+    connectResource,
+    findProjectResource
+
 }
 
-function find() {
-  return db('projects')
+function find(){
+    return db("projects");
 }
 
-function findById(id) {
-  return db('projects')
-    .where({id})
-    .first()
+function findById(id){
+    return db("projects").where("id", id).first();
 }
 
-function insert(data) {
-  return db('projects').insert(data, 'id')
-    .then(([id]) => {
-      return findById(id)
-    })
+function findResources(){
+    return db("resources");
 }
 
-function findResource(projectId) {
-  return db('resources')
-    .join('project_resources', 'resources.id', 'project_resources.resource_id')
-    .where({'project_resources.project_id': projectId})
+function addProject(project){
+    return db.insert(project,"*").into("projects");
 }
 
-function findResourceById(id) {
-  return db('resources')
-    .where(({id}))
+function addTask(task){
+    return db.insert(task,"*").into("tasks");
 }
 
-function insertResource(projectId, resource) {
-  return db('resources').insert(resource)
-    .then(([id]) => {
-      return db('project_resources').insert({
-        project_id: projectId,
-        resource_id: id,
-      })
-    })
-    .catch(() => {
-      return findResourceById(id)
-    })
-} 
+function findTask(id){
+    return db("tasks")
+        .select('tasks.description','tasks.notes','tasks.completed','projects.name')
+        .join('projects','projects.id','tasks.projectID')
+        .where("projectID", id);
+}
+
+function addResource(resource){
+    return db.insert(resource,"*").into("resources");
+}
+
+function connectResource(resourceID,projectID){
+    return db.insert({resourceID:resourceID,projectID:projectID},"*").into("projectDetails");
+}
+
+function findProjectResource(projectID){
+    return db
+        .select('resources.name','resources.decription','projects.name as projectName')
+        .from("projectDetails")
+        .join("resources","resources.id","projectDetails.resourceID")
+        .join("projects", "projects.id","projectDetails.projectID")
+        .where("projectDetails.projectID", projectID);
+}

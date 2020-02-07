@@ -1,65 +1,60 @@
 exports.up = function(knex) {
-    return knex.schema
-      .createTable('projects', tbl => {
-        tbl.increments();
-
-        tbl
-          .string('name', 128)
-          .unique()
-          .notNullable();
-
-        tbl.string('description', 128);
-
-        tbl.boolean('completed').notNullable();
-      })
-
-      .createTable('resources', tbl => {
-        tbl.increments();
-        tbl.string('name', 128)
-          .unique()
-          .notNullable();
-
-        tbl.string('description', 128);
-      })
-
-      .createTable('tasks', tbl => {
-        tbl.increments();
-        tbl.string('description', 255).notNullable();
-        tbl.string('notes', 128).notNullable();
-        tbl.boolean('completed').notNullable();
-        tbl.integer('project_id')
+    return knex.schema.createTable("projects",tbl=>{
+        tbl.increments(); 
+        tbl.string("name",255)
+          .notNullable(); 
+        tbl.string("description", 255); 
+        tbl.boolean("completed")
+          .notNullable()
+          .defaultTo(false);
+  
+      }).createTable("resources", tbl=>{
+        tbl.increments(); 
+        tbl.string("name",255)
+          .notNullable(); 
+        tbl.string("decription"); 
+  
+    }).createTable("projectDetails",tbl=>{
+        tbl.increments(); 
+        tbl.integer("projectID")
           .unsigned()
           .notNullable()
-          .references('id')
+          .references("id")
           .inTable('projects')
-          .onDelete('RESTRICT')
-          .onUpdate('CASCADE');
-      })
-
-      .createTable('project_resources', tbl => {
-        tbl.increments();
-        tbl.integer('project_id')
+          .onUpdate('CASCADE')
+          .onDelete('CASCADE'); 
+      tbl.integer("resourceID")
           .unsigned()
           .notNullable()
-          .references('id')
+          .references("id")
+          .inTable("resources")
+          .onUpdate('CASCADE')
+          .onDelete('CASCADE'); 
+  
+    }).createTable("tasks",tbl=>{
+        tbl.increments(); 
+        tbl.string("description",255)
+          .notNullable(); 
+        tbl.string("notes",255);
+        tbl.integer("projectID")
+          .unsigned()
+          .notNullable()
+          .references("id")
           .inTable('projects')
-          .onDelete('RESTRICT')
-          .onUpdate('CASCADE');
-
-        tbl.integer('resource_id')
-          .unsigned()
+          .onUpdate('CASCADE')
+          .onDelete('CASCADE'); 
+        tbl.boolean("completed")
           .notNullable()
-          .references('id')
-          .inTable('resources')
-          .onDelete('RESTRICT')
-          .onUpdate('CASCADE');
-      })
+          .defaultTo(false);  
+    })
   };
-
+  
   exports.down = function(knex) {
     return knex.schema
-      .dropTableIfExists('project_resources')
-      .dropTableIfExists('tasks')
-      .dropTableIfExists('resources')
-      .dropTableIfExists('projects') 
+    .dropTableIfExists('tasks')
+    .dropTableIfExists('projectDetails')
+    .dropTableIfExists('resources')
+    .dropTableIfExists('projects') 
   };
+
+
